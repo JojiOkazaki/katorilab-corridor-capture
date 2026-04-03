@@ -1,0 +1,38 @@
+# カメラ設定（ホストIPは .env の RTSP_HOST で指定）
+camera:
+  port: 554
+  stream_path: "/stream1"
+  rtsp_transport: "tcp"
+
+# 録画設定
+recording:
+  segment_duration: 10      # セグメント長（秒）
+  buffer_segments: 3        # 保持するセグメント数（ローリングウィンドウ）
+
+# 人物検出設定
+detection:
+  model: "yolov8n.pt"
+  confidence_threshold: 0.1
+  interval_frames: 1        # 何フレームごとに検出するか
+
+# クリッピング設定
+clipping:
+  pre_buffer: 5             # 検出前に含める秒数
+  post_buffer: 5            # 検出後に含める秒数
+  min_clip_duration: 0      # 保存する最小クリップ長（秒）
+
+# 保存設定
+output:
+  tmp_dir: "/mnt/d/katorilab-corridor-capture/tmp"
+  save_dir: "/mnt/d/katorilab-corridor-capture/clips"
+
+# 容量管理
+storage:
+  max_days: 0               # 0 = 制限なし
+  max_gb: 0                 # 0 = 制限なし
+
+# rclone同期設定
+sync:
+  enabled: true
+  remote: "box:katorilab-corridor-capture"
+  interval_minutes: 60

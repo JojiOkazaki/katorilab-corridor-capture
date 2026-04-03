@@ -1,0 +1,19 @@
+# 認証情報
+.env
+
+# ログ
+logs/*
+!logs/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# conda
+*.conda
+
+# エディタ
+.vscode/
+.idea/
