@@ -53,6 +53,7 @@ def main() -> None:
     # 処理状態の管理
     known_segments: list[Path] = []   # 検出済みの完了セグメント（時刻順）
     detection_results: dict[Path, bool] = {}
+    confidence_results: dict[Path, float] = {}
     finalize_idx: int = 0             # 次にクリッピング判定するセグメントのインデックス
     delete_idx: int = 0               # 次に削除候補とするセグメントのインデックス
     buffer_size: int = config["recording"]["buffer_segments"]
@@ -67,10 +68,14 @@ def main() -> None:
             known_set = set(known_segments)
             for seg in complete:
                 if seg not in known_set:
-                    has_person = detector.detect(seg)
+                    has_person, max_conf = detector.detect(seg)
                     detection_results[seg] = has_person
+                    confidence_results[seg] = max_conf
                     known_segments.append(seg)
-                    logger.info(f"{seg.name}: {'人物検出' if has_person else '人物なし'}")
+                    if has_person:
+                        logger.info(f"{seg.name}: 人物検出 (conf={max_conf:.2f})")
+                    else:
+                        logger.info(f"{seg.name}: 人物なし (max_conf={max_conf:.2f})")
 
             # ポストバッファが揃ったセグメントのクリッピング判定
             # セグメントN の判定は N+1 が完了してから行う
@@ -94,6 +99,7 @@ def main() -> None:
                     seg.unlink()
                     logger.debug(f"セグメント削除: {seg.name}")
                 detection_results.pop(seg, None)
+                confidence_results.pop(seg, None)
                 delete_idx += 1
 
             time.sleep(1)

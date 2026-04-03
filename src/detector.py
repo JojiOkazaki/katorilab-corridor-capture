@@ -14,15 +14,16 @@ class Detector:
         self.confidence = confidence
         self.interval_frames = interval_frames
 
-    def detect(self, video_path: Path) -> bool:
-        """動画ファイルを解析し、人物が検出されたかどうかを返す。"""
+    def detect(self, video_path: Path) -> tuple[bool, float]:
+        """動画ファイルを解析し、(人物検出フラグ, セグメント内の最大信頼度スコア) を返す。"""
         cap = cv2.VideoCapture(str(video_path))
         if not cap.isOpened():
             logger.warning(f"動画ファイルを開けません: {video_path}")
-            return False
+            return False, 0.0
 
         frame_idx = 0
         detected = False
+        max_conf = 0.0
 
         try:
             while True:
@@ -37,12 +38,15 @@ class Detector:
                         conf=self.confidence,
                         verbose=False,
                     )
-                    if any(len(r.boxes) > 0 for r in results):
-                        detected = True
-                        break
+                    for r in results:
+                        if len(r.boxes) > 0:
+                            conf = float(r.boxes.conf.max())
+                            if conf > max_conf:
+                                max_conf = conf
+                            detected = True
 
                 frame_idx += 1
         finally:
             cap.release()
 
-        return detected
+        return detected, max_conf
