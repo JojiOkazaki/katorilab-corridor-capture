@@ -38,7 +38,7 @@ class Clipper:
         ]
 
         try:
-            result = subprocess.run(cmd, capture_output=True, timeout=60)
+            result = subprocess.run(cmd, capture_output=True, timeout=120)
             if result.returncode != 0:
                 logger.error(f"クリップ保存失敗: {result.stderr.decode()}")
                 return None
