@@ -28,7 +28,8 @@ class Recorder:
             "-rtsp_transport", self.rtsp_transport,
             "-stimeout", "5000000",  # ソケットタイムアウト（マイクロ秒）
             "-i", self.rtsp_url,
-            "-c", "copy",
+            "-an",
+            "-c:v", "copy",
             "-f", "segment",
             "-segment_time", str(self.segment_duration),
             "-segment_format", "mp4",

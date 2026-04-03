@@ -31,7 +31,8 @@ class Clipper:
             "-f", "concat",
             "-safe", "0",
             "-i", str(concat_file),
-            "-c", "copy",
+            "-an",
+            "-c:v", "copy",
             "-loglevel", "warning",
             str(output_path),
         ]
