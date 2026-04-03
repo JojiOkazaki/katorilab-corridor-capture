@@ -14,10 +14,11 @@ def load_config(config_path: str | Path = "config.yaml") -> dict:
     host = os.environ["RTSP_HOST"]
     user = os.environ["RTSP_USER"]
     password = os.environ["RTSP_PASS"]
-    port = config["camera"]["port"]
+    port = config["camera"].get("port")
     stream_path = config["camera"]["stream_path"]
 
-    config["camera"]["rtsp_url"] = f"rtsp://{user}:{password}@{host}:{port}{stream_path}"
+    host_part = f"{host}:{port}" if port else host
+    config["camera"]["rtsp_url"] = f"rtsp://{user}:{password}@{host_part}{stream_path}"
 
     # パス内の ~ を展開
     for key in ("tmp_dir", "save_dir"):

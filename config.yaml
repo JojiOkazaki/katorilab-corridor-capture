@@ -1,6 +1,6 @@
 # カメラ設定（ホストIPは .env の RTSP_HOST で指定）
 camera:
-  port: 554
+  port:                     # 省略時はURLにポートを含めない
   stream_path: "/stream1"
   rtsp_transport: "tcp"
 
