@@ -23,12 +23,12 @@ clipping:
 
 # 保存設定
 output:
-  tmp_dir: "/mnt/d/katorilab-corridor-capture/tmp"
-  save_dir: "/mnt/d/katorilab-corridor-capture/clips"
+  tmp_dir: "~/katorilab-corridor-capture/tmp"
+  save_dir: "~/katorilab-corridor-capture/clips"
 
 # 容量管理
 storage:
-  max_days: 0               # 0 = 制限なし
+  max_days: 7               # Box同期済みファイルをローカルから削除するまでの日数（0 = 制限なし）
   max_gb: 0                 # 0 = 制限なし
 
 # rclone同期設定
