@@ -26,7 +26,6 @@ class Recorder:
         cmd = [
             "ffmpeg",
             "-rtsp_transport", self.rtsp_transport,
-            "-stimeout", "5000000",  # ソケットタイムアウト（マイクロ秒）
             "-i", self.rtsp_url,
             "-an",
             "-c:v", "copy",
