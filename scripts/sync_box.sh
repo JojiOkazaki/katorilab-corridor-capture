@@ -6,18 +6,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG="$SCRIPT_DIR/../config.yaml"
 LOG_FILE="$SCRIPT_DIR/../logs/sync.log"
 
+# conda環境のPythonを使用（pyyamlのため）
+CONDA_PYTHON="$HOME/miniconda3/envs/katorilab-corridor-capture/bin/python3"
+
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
 # config.yamlから設定を読み込む
-SAVE_DIR=$(python3 -c "
+SAVE_DIR=$("$CONDA_PYTHON" -c "
 import yaml, os
 c = yaml.safe_load(open('$CONFIG'))
 print(os.path.expanduser(c['output']['save_dir']))
 ")
-REMOTE=$(python3 -c "import yaml; c=yaml.safe_load(open('$CONFIG')); print(c['sync']['remote'])")
-MAX_DAYS=$(python3 -c "import yaml; c=yaml.safe_load(open('$CONFIG')); print(c['storage']['max_days'])")
+REMOTE=$("$CONDA_PYTHON" -c "import yaml; c=yaml.safe_load(open('$CONFIG')); print(c['sync']['remote'])")
+MAX_DAYS=$("$CONDA_PYTHON" -c "import yaml; c=yaml.safe_load(open('$CONFIG')); print(c['storage']['max_days'])")
 
 # Box接続確認
 log "Box接続確認..."
