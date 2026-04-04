@@ -12,7 +12,7 @@ recording:
 # 人物検出設定
 detection:
   model: "yolov8n.pt"
-  confidence_threshold: 0.1
+  confidence_threshold: 0.3
   interval_frames: 1        # 何フレームごとに検出するか
 
 # クリッピング設定
