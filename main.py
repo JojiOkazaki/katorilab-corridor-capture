@@ -92,6 +92,9 @@ def main() -> None:
             known_set = set(known_segments)
             for seg in complete:
                 if seg not in known_set:
+                    # moov atom書き込み完了を待つ（mtime が1秒以内はスキップ）
+                    if time.time() - seg.stat().st_mtime < 1.0:
+                        continue
                     has_person, max_conf = detector.detect(seg)
                     detection_results[seg] = has_person
                     confidence_results[seg] = max_conf
