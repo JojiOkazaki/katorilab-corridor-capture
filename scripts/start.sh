@@ -13,8 +13,8 @@ if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
     exit 0
 fi
 
-source "$HOME/miniconda3/etc/profile.d/conda.sh"
-conda activate katorilab-corridor-capture
+# conda activateを使わずフルパスで指定（非インタラクティブシェル対応）
+PYTHON="$HOME/miniconda3/envs/katorilab-corridor-capture/bin/python"
 cd "$PROJECT_DIR"
 
 (
@@ -31,7 +31,7 @@ cd "$PROJECT_DIR"
     # 再起動ループ: 異常終了時は30秒待って再起動
     while true; do
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] main.py 起動" >> "$LOG_FILE"
-        python main.py >> "$LOG_FILE" 2>&1 &
+        "$PYTHON" main.py >> "$LOG_FILE" 2>&1 &
         PYTHON_PID=$!
         wait $PYTHON_PID
         EXIT_CODE=$?
