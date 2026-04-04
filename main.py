@@ -28,15 +28,17 @@ def save_window(
     window_end: int,
     logger: logging.Logger,
 ) -> None:
-    """検出ウィンドウ[window_start, window_end]を前後1セグメントのバッファを含めて保存する。"""
+    """検出ウィンドウ[window_start, window_end]を前後バッファを含めて保存する。"""
     pre_idx = max(0, window_start - 1)
     post_idx = min(len(known_segments) - 1, window_end + 1)
+    n_pre = window_start - pre_idx    # 0 or 1
+    n_post = post_idx - window_end    # 0 or 1
     segs = known_segments[pre_idx : post_idx + 1]
     logger.info(
         f"クリップ確定: {known_segments[window_start].name}"
         f" 〜 {known_segments[window_end].name} ({len(segs)}セグメント)"
     )
-    clipper.save(segs)
+    clipper.save(segs, n_pre=n_pre, n_post=n_post)
 
 
 def main() -> None:
@@ -63,6 +65,9 @@ def main() -> None:
     clipper = Clipper(
         save_dir=save_dir,
         min_clip_duration=config["clipping"]["min_clip_duration"],
+        pre_buffer=config["clipping"]["pre_buffer"],
+        post_buffer=config["clipping"]["post_buffer"],
+        segment_duration=config["recording"]["segment_duration"],
     )
 
     recorder.start()
