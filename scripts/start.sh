@@ -41,5 +41,7 @@ cd "$PROJECT_DIR"
     done
 ) &
 
-echo $! > "$PID_FILE"
-echo "起動完了 (PID: $!)"
+LOOP_PID=$!
+disown $LOOP_PID  # SSH切断時のSIGHUPを防ぐ
+echo $LOOP_PID > "$PID_FILE"
+echo "起動完了 (PID: $LOOP_PID)"
