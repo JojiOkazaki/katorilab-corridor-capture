@@ -1,5 +1,4 @@
 import logging
-import sys
 import time
 from pathlib import Path
 
@@ -15,7 +14,6 @@ def setup_logging(log_dir: Path) -> None:
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         handlers=[
-            logging.StreamHandler(sys.stdout),
             logging.FileHandler(log_dir / "capture.log", encoding="utf-8"),
         ],
     )
