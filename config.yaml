@@ -34,5 +34,5 @@ storage:
 # rclone同期設定
 sync:
   enabled: true
-  remote: "box:katorilab-corridor-capture"
+  remote: "box:okazaki_joji/research/datasets/original/katorilab-corridor-video"
   interval_minutes: 60
