@@ -27,6 +27,19 @@ if ! rclone lsd "$REMOTE" > /dev/null 2>&1; then
 fi
 log "Box接続OK"
 
+# ファイル名（YYYYMMDD_...）から日本の年度を計算する関数
+# 4月〜12月: その年が年度 / 1月〜3月: 前年が年度
+get_fiscal_year() {
+    local filename="$1"
+    local year="${filename:0:4}"
+    local month="${filename:4:2}"
+    if [ "$month" -ge 4 ]; then
+        echo "$year"
+    else
+        echo $((year - 1))
+    fi
+}
+
 # ファイルをファイル名の年度ごとにBoxへアップロード
 log "アップロード開始: $SAVE_DIR -> $REMOTE"
 upload_ok=0
@@ -35,8 +48,8 @@ upload_fail=0
 for file in "$SAVE_DIR"/*.mp4; do
     [ -e "$file" ] || continue
     filename=$(basename "$file")
-    file_year="${filename:0:4}"  # ファイル名YYYYMMDD_...から年度を取得
-    remote_dir="$REMOTE/$file_year"
+    fiscal_year=$(get_fiscal_year "$filename")
+    remote_dir="$REMOTE/$fiscal_year"
 
     if rclone copy "$file" "$remote_dir/" --log-file="$LOG_FILE" --log-level INFO 2>&1; then
         upload_ok=$((upload_ok + 1))
@@ -51,13 +64,11 @@ log "アップロード完了: 成功=${upload_ok}, 失敗=${upload_fail}"
 # max_days日以上経過したローカルファイルをBoxの存在確認後に削除
 if [ "$MAX_DAYS" -gt 0 ]; then
     log "${MAX_DAYS}日以上経過したファイルの削除チェック開始"
-    delete_ok=0
-    delete_skip=0
 
     find "$SAVE_DIR" -name "*.mp4" -mtime "+$MAX_DAYS" | while read -r file; do
         filename=$(basename "$file")
-        file_year="${filename:0:4}"
-        remote_path="$REMOTE/$file_year/$filename"
+        fiscal_year=$(get_fiscal_year "$filename")
+        remote_path="$REMOTE/$fiscal_year/$filename"
 
         # Box上に存在することを確認してから削除
         if rclone ls "$remote_path" > /dev/null 2>&1; then
