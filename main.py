@@ -21,6 +21,24 @@ def setup_logging(log_dir: Path) -> None:
     )
 
 
+def save_window(
+    clipper: Clipper,
+    known_segments: list[Path],
+    window_start: int,
+    window_end: int,
+    logger: logging.Logger,
+) -> None:
+    """検出ウィンドウ[window_start, window_end]を前後1セグメントのバッファを含めて保存する。"""
+    pre_idx = max(0, window_start - 1)
+    post_idx = min(len(known_segments) - 1, window_end + 1)
+    segs = known_segments[pre_idx : post_idx + 1]
+    logger.info(
+        f"クリップ確定: {known_segments[window_start].name}"
+        f" 〜 {known_segments[window_end].name} ({len(segs)}セグメント)"
+    )
+    clipper.save(segs)
+
+
 def main() -> None:
     config = load_config()
     setup_logging(Path("logs"))
@@ -50,13 +68,16 @@ def main() -> None:
     recorder.start()
     logger.info("システム起動")
 
-    # 処理状態の管理
-    known_segments: list[Path] = []   # 検出済みの完了セグメント（時刻順）
+    known_segments: list[Path] = []
     detection_results: dict[Path, bool] = {}
     confidence_results: dict[Path, float] = {}
-    finalize_idx: int = 0             # 次にクリッピング判定するセグメントのインデックス
-    delete_idx: int = 0               # 次に削除候補とするセグメントのインデックス
+    finalize_idx: int = 0
+    delete_idx: int = 0
     buffer_size: int = config["recording"]["buffer_segments"]
+
+    # 検出ウィンドウ: 連続検出の開始・終了インデックス
+    window_start: int | None = None
+    window_end: int | None = None
 
     try:
         while recorder.is_running():
@@ -77,23 +98,33 @@ def main() -> None:
                     else:
                         logger.info(f"{seg.name}: 人物なし (max_conf={max_conf:.2f})")
 
-            # ポストバッファが揃ったセグメントのクリッピング判定
-            # セグメントN の判定は N+1 が完了してから行う
+            # 連続検出ウィンドウを管理してクリッピング判定
+            # セグメントN の判定は N+1 が完了してから行う（ポストバッファのため）
             while finalize_idx < len(known_segments) - 1:
                 i = finalize_idx
                 curr = known_segments[i]
-                pre = known_segments[i - 1] if i > 0 else None
-                post = known_segments[i + 1]
 
                 if detection_results.get(curr):
-                    segs = [s for s in [pre, curr, post] if s is not None]
-                    clipper.save(segs)
+                    # 人物あり: ウィンドウを開始 or 継続
+                    if window_start is None:
+                        window_start = i
+                    window_end = i
+                else:
+                    # 人物なし: 直前までウィンドウが開いていたら確定して保存
+                    if window_start is not None:
+                        save_window(clipper, known_segments, window_start, window_end, logger)
+                        window_start = None
+                        window_end = None
 
                 finalize_idx += 1
 
-            # バッファウィンドウ外の古いセグメントを削除
-            delete_threshold = finalize_idx - buffer_size
-            while delete_idx < delete_threshold:
+            # バッファウィンドウ外かつ検出ウィンドウ外の古いセグメントを削除
+            safe_delete = finalize_idx - buffer_size
+            if window_start is not None:
+                # 検出ウィンドウのプリバッファは削除しない
+                safe_delete = min(safe_delete, window_start - 1)
+
+            while delete_idx < safe_delete:
                 seg = known_segments[delete_idx]
                 if seg.exists():
                     seg.unlink()
@@ -107,6 +138,10 @@ def main() -> None:
     except KeyboardInterrupt:
         logger.info("停止シグナル受信 (Ctrl+C)")
     finally:
+        # 終了時に未確定の検出ウィンドウがあれば保存
+        if window_start is not None:
+            logger.info("終了時に未確定のウィンドウを保存")
+            save_window(clipper, known_segments, window_start, window_end, logger)
         recorder.stop()
         logger.info("システム終了")
 
